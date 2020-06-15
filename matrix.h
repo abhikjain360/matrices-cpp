@@ -39,6 +39,7 @@ class matrix {
 			}
 		}
 
+		// assigning variable later to save space on stack
 		matrix C = matrix(r, c, arr);
 		return C;
 	}
@@ -65,6 +66,7 @@ class matrix {
 			}
 		}
 
+		// assigning variable later to save space on stack
 		matrix C = matrix(r, c, arr);
 		return C;
 	}
@@ -93,6 +95,7 @@ class matrix {
 			}
 		}
 
+		// assigning variable later to save space on stack
 		matrix C = matrix(r, c, arr);
 		return C;
 	}
@@ -127,40 +130,45 @@ class matrix {
 
 matrix regular_add(matrix& A, matrix& B) {
 	spt<double[]> arr = mkspt<double[]>(new double[A.r * A.c], [](double *p) { delete[] p; });
-	matrix C(A.r, A.c, arr);
 
 	for (int i = 0;  i < A.r; ++i) {
 		for (int j = 0; j < B.c; ++j)
-			C[i*A.c + j] = A[i*A.c + j] + B[i*A.c + j];
+			arr[i*A.c + j] = A[i*A.c + j] + B[i*A.c + j];
 	}
+
+	// assigning variable later to save space on stack
+	matrix C(A.r, A.c, arr);
 	return C;
 }
 
 matrix regular_sub(matrix& A, matrix& B) {
 	spt<double[]> arr = mkspt<double[]>(new double[A.r * A.c], [](double *p) { delete[] p; });
-	matrix C(A.r, A.c, arr);
 
 	for (int i = 0;  i < A.r; ++i) {
 		for (int j = 0; j < B.c; ++j)
-			C[i*A.c + j] = A[i*A.c + j] + B[i*A.c + j];
+			arr[i*A.c + j] = A[i*A.c + j] + B[i*A.c + j];
 	}
+
+	// assigning variable later to save space on stack
+	matrix C(A.r, A.c, arr);
 	return C;
 
 }
 
 matrix regular_mul(matrix& A, matrix& B) {
 	spt<double[]> arr = mkspt<double[]>(new double[A.r * A.c], [](double *p) { delete[] p; });
-	matrix C(A.r, B.c, arr);
 
 	for (int i = 0; i < A.r; ++i) {
 		for (int j = 0; j < B.c; ++j) {
-				C[i*A.r + j] = 0;
+				arr[i*A.r + j] = 0;
 			for (int k = 0; k < A.c; ++k) {
-				C[i*B.c + j] += A[i*A.c + k] * B[k*B.c + j];
+				arr[i*B.c + j] += A[i*A.c + k] * B[k*B.c + j];
 			}
 		}
 	}
 
+	// assigning variable later to save space on stack
+	matrix C(A.r, B.c, arr);
 	return C;
 }
 
