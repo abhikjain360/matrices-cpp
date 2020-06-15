@@ -31,7 +31,11 @@ class quad {
 		if (index > r*c)
 			return 0;
 
-		return ar[x*orig_c + y + index];
+		if (orig_c == 0)
+			return ar[index];
+
+		auto i = index/c, j = index%c;
+		return ar[(x+i)*orig_c + y + j];
 	}
 
 	quad operator + (quad &B) {
