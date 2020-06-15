@@ -2,6 +2,7 @@
 #define MATRIX_H
 
 #include "threadpool.h" 	// for multithreading
+#include "quad.h"
 
 #include <iostream> 		// for debugging, remove later
 
@@ -13,7 +14,10 @@ class matrix {
   public:
 	matrix(u_int rows, u_int cols, spt<double[]> &arr) : r(rows), c(cols), ar(arr) {}
 
-	double &operator [] (u_int index) {
+	double operator [] (u_int index) {
+		if (index >= r || index >= c)
+			return 0;
+
 		return ar[index];
 	}
 
@@ -120,11 +124,22 @@ class matrix {
 		std::cout << "=====================\n";
 	}
 
+	quad mkquad(u_int n, u_int size) {
+		u_int x = 0, y = 0;
+
+		if 	(n == 2) { y = size; }
+		else if (n == 3) { x = size; }
+		else if (n == 4) { x = size; y = x; }
+
+		quad q(size, size, c, x, y, ar);
+		return q;
+	}
+
   public:
 	u_int r, c;
-
   private:
 	spt<double[]> ar;
+
 };
 
 
@@ -169,6 +184,22 @@ matrix regular_mul(matrix& A, matrix& B) {
 
 	// assigning variable later to save space on stack
 	matrix C(A.r, B.c, arr);
+	return C;
+}
+
+matrix strassen(matrix &A, matrix &B) {
+	auto arr = mkspt<double[]>(new double[A.r * A.c], [](double *p) { delete[] p; });
+
+	// assigning variable later to save space on stack
+	matrix C(A.r, B.c, arr);
+
+	auto temp_size = A.r > A.c ? A.r : A.c;
+	temp_size = temp_size > B.c ? temp_size : B.c;
+	temp_size = temp_size > B.r ? temp_size : B.r;
+
+	u_int size = 1;
+	while (size < temp_size) size << 1;
+
 	return C;
 }
 
