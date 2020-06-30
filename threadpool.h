@@ -28,6 +28,12 @@ class threadpool {
 		}
 	}
 
+	explicit threadpool() {
+		threads.reserve(3);
+
+		threads.emplace_back(std::thread(&threadpool::thread_manager, this));
+	}
+
 	~threadpool() noexcept {
 		{
 			std::unique_lock<std::mutex> lock(mu);
