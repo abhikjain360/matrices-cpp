@@ -1,6 +1,5 @@
-~
 A
 B
-a.out
-test.cpp
-main.cpp
+normal/main.cpp
+multithreaded/main.cpp
+gpu/main.cpp
