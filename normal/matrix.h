@@ -36,6 +36,7 @@ std::ostream& operator << (std::ostream& output, const matrix<T>& A);
 
 /* constructors */
 template <typename T>
+inline
 matrix<T>::matrix
 (
 	unsigned int rows,
@@ -54,16 +55,19 @@ matrix<T>::matrix(unsigned int rows, unsigned int cols)
 
 /* deconstructor */
 template <typename T>
+inline
 matrix<T>::~matrix() {}
 
 /* easy indexing */
 template <typename T>
+inline
 T& matrix<T>::operator [] (unsigned int index) const {
 	return arr[index];
 }
 
 /* sub-matricing */
 template <typename T>
+inline
 quad<T> matrix<T>::subquad(unsigned int index1, unsigned int index2) const {
 	unsigned int row_offset = index1 / this->cols,
 		     col_offset = index1 % this->cols,
@@ -79,6 +83,7 @@ quad<T> matrix<T>::subquad(unsigned int index1, unsigned int index2) const {
 
 /* easy printing */
 template <typename T>
+inline
 std::ostream& operator << (std::ostream& output, const matrix<T>& A) {
 	output << "============================\n";
 
@@ -97,6 +102,7 @@ std::ostream& operator << (std::ostream& output, const matrix<T>& A) {
 /* basic operation */
 /* addition */
 template <typename T>
+inline
 matrix<T> matrix<T>::operator + (const matrix<T>& B) const {
 	ASSERT(this->rows == B.rows && this->cols == B.cols);
 
@@ -113,6 +119,7 @@ matrix<T> matrix<T>::operator + (const matrix<T>& B) const {
 
 /* subtraction */
 template <typename T>
+inline
 matrix<T> matrix<T>::operator - (const matrix<T>& B) const {
 	ASSERT(this->rows == B.rows && this->cols == B.cols);
 
@@ -129,6 +136,7 @@ matrix<T> matrix<T>::operator - (const matrix<T>& B) const {
 
 /* multiplication */
 template <typename T>
+inline
 matrix<T> matrix<T>::operator * (const matrix<T>& B) const {
 	ASSERT(this->cols == B.rows);
 
@@ -146,7 +154,20 @@ matrix<T> matrix<T>::operator * (const matrix<T>& B) const {
 	return C;
 }
 
+/* from quad.h as matrices
+   weren't defined then */
 template <typename T>
+matrix<T> quad<T>::tomatrix() const {
+	matrix<T> C(this->rows, this->cols);
+
+	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
+		C[i] = this[i];
+
+	return C;
+}
+
+template <typename T>
+inline
 matrix<T> matrix<T>::strassen(const matrix<T>& B) const {
 	ASSERT(this->cols == B.rows);
 
@@ -166,8 +187,10 @@ matrix<T> matrix<T>::strassen(const matrix<T>& B) const {
 				(B.rows - 1) * B.cols + B.cols / 2 - 1),
 		h = B.subquad(B.rows * B.cols / 2 + B.cols / 2, B.rows * B.cols - 1);
 
-	std::cout << "submatrices\n";
-	std::cout<<a<<b<<c<<d<<e<<f<<g<<h<<std::endl;
+	quad<T> temp = f - h;
+	std::cout << temp;
+	temp = temp*a;
+	std::cout << temp;
 
 	// matrices needed for strassen
 	quad<T> p1 = a * (f - h),
@@ -188,7 +211,7 @@ matrix<T> matrix<T>::strassen(const matrix<T>& B) const {
 		c4 = p1 + p5 - p3 - p7;
 
 	std::cout << "cs\n";
-	std::cout << c1 << c2 << c3 << c4 << std::endl;
+	std::cout << c1[0] << c2[0] << c3[0] << c4[0] << std::endl;
 
 	matrix C(this->rows, B.cols);
 	unsigned int index = 0,
@@ -205,9 +228,6 @@ matrix<T> matrix<T>::strassen(const matrix<T>& B) const {
 
 	for (unsigned int i = 0; i < limit; ++i, ++index)
 		C[index] = c4[i];
-
-	std::cout << a << b << c << d << std::endl;
-	std::cout << e << f << g << h << std::endl;
 
 	return C;
 }

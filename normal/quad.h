@@ -18,6 +18,9 @@ void print_matrix_error(std::string condition, std::string file, int line) {
 }
 
 template <typename T>
+class matrix;
+
+template <typename T>
 class quad {
   public:
 	/* constructors */
@@ -48,6 +51,10 @@ class quad {
 
 	/* easy subquading */
 	quad subquad(unsigned int index1, unsigned int index2) const;
+
+	/* quad to matrices, copies values
+	   instead of shared pointer sharing */
+	matrix<T> tomatrix() const;
 
 	/* basic operations */
 	quad operator + (const quad& B) const;
