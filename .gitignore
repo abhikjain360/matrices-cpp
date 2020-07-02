@@ -1,7 +1,3 @@
 A
 B
-normal/main.cpp
-normal/main
-multithreaded/main.cpp
-multithreaded/main
-gpu/main.cpp
+gpu
