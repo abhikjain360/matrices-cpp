@@ -8,20 +8,20 @@
 #include <vector>
 #include <queue>
 
-const u_int MAX_THREADS = std::thread::hardware_concurrency() - 1;
+const unsigned int MAX_THREADS = std::thread::hardware_concurrency();
 
 
 class threadpool {
   public:
 	using Task = std::function<void()>;
 
-	explicit threadpool(u_int num_threads) {
+	explicit threadpool(unsigned int num_threads) {
 		if (num_threads > MAX_THREADS)
 			num_threads = MAX_THREADS;
 
 		threads.reserve(num_threads);
 
-		for (u_int i = 0; i < num_threads; ++i) {
+		for (unsigned int i = 0; i < num_threads; ++i) {
 			threads.emplace_back(std::thread(&threadpool::thread_manager, this));
 			// Might need to uncomment this if bug occurs
 			//threads.back().detach();
