@@ -1,17 +1,19 @@
 CXX 	= g++
-CFLAGS 	= -I . -g -Wpedantic -Wall -Wextra -std=c++17
-
+CFLAGS 	= -I . -pthread -Wpedantic -Wall -Wextra -std=c++20
 SRC 	= $(wildcard *.cpp)
 
 
 app: $(SRC)
-	$(CXX) $(CFLAGS) $^ -o main
+	$(CXX) $(CFLAGS) -O3 $^ -o main
 
 run:
 	./main
 
-debug:
-	gdb ./main
+test:
+	make && make run
+
+debug: $(SRC)
+	$(CXX) $(CFLAGS) -g $^ -o main && gdb ./main
 
 clean:
 	rm -f main
