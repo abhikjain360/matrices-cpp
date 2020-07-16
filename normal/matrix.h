@@ -29,15 +29,12 @@ private:
 /* constructors */
 template <typename T>
 inline
-matrix<T>::matrix
-(
-    unsigned int rows,
-    unsigned int cols,
-    std::shared_ptr<T[]> arr
-)
-	: rows(rows), cols(cols), arr(arr) {}
+matrix<T>::matrix(unsigned int rows, unsigned int cols, std::shared_ptr<T[]> arr)
+	: rows(rows), cols(cols), arr(arr)
+{}
 
 template <typename T>
+inline
 matrix<T>::matrix(unsigned int rows, unsigned int cols)
 	: rows(rows), cols(cols)
 {
@@ -64,7 +61,6 @@ T& matrix<T>::operator [] (unsigned int index) const
 
 /* sub-matricing */
 template <typename T>
-inline
 quad<T> matrix<T>::subquad(unsigned int index1, unsigned int index2) const
 {
 	unsigned int row_offset = index1 / this->cols,
@@ -176,8 +172,7 @@ matrix<T> normal_matmul(const matrix<T>& A, const matrix<T>& B)
 		for (unsigned int j = 0; j < B.cols; ++j) {
 			C[i*C.cols + j] = 0;
 			for (unsigned int k = 0; k < B.rows; ++k)
-				C[i*C.cols + j] +=
-				    A[i*A.cols + k] * B[k*B.cols + j];
+				C[i*C.cols + j] += A[i*A.cols + k] * B[k*B.cols + j];
 		}
 	}
 
@@ -190,20 +185,15 @@ matrix<T> strassen(const matrix<T>& A, const matrix<T>& B)
 	ASSERT(A.cols == B.rows);
 
 	// getting the quater submatrices
-	quad<T> a = A.subquad(0,
-	                      (A.rows - 1)/2 * A.cols + A.cols / 2 - 1),
-	            b = A.subquad(A.cols / 2,
-	                          (A.rows - 1)/2 * A.cols + A.cols - 1),
-	                c = A.subquad(A.rows * A.cols / 2,
-	                              (A.rows - 1) * A.cols + A.cols / 2 - 1),
-	                    d = A.subquad(A.rows * A.cols / 2 + A.cols / 2,
-	                                  A.rows * A.cols - 1);
+	quad<T> a = A.subquad(0, (A.rows - 1)/2 * A.cols + A.cols / 2 - 1),
+	        b = A.subquad(A.cols / 2, (A.rows - 1)/2 * A.cols + A.cols - 1),
+	        c = A.subquad(A.rows * A.cols / 2, (A.rows - 1) * A.cols + A.cols / 2 - 1),
+	        d = A.subquad(A.rows * A.cols / 2 + A.cols / 2, A.rows * A.cols - 1);
 
 	quad<T> e = B.subquad(0, (B.rows - 1)/2 * B.cols + B.cols / 2 - 1),
 	        f = B.subquad(B.cols / 2, (B.rows - 1)/2 * B.cols + B.cols - 1),
-	        g = B.subquad(B.rows * B.cols / 2,
-	                      (B.rows - 1) * B.cols + B.cols / 2 - 1),
-	            h = B.subquad(B.rows * B.cols / 2 + B.cols / 2, B.rows * B.cols - 1);
+	        g = B.subquad(B.rows * B.cols / 2, (B.rows - 1) * B.cols + B.cols / 2 - 1),
+	        h = B.subquad(B.rows * B.cols / 2 + B.cols / 2, B.rows * B.cols - 1);
 
 	// matrices needed for strassen
 	quad<T> p1 = (a + d) * (e + h),
@@ -223,9 +213,9 @@ matrix<T> strassen(const matrix<T>& A, const matrix<T>& B)
 
 	for (unsigned int i = 0; i < c1.rows; ++i) {
 		for (unsigned int j = 0; j < c1.cols; ++j) {
-			C[i * C.cols + j] = c1[i * c1.cols + j];
-			C[i * C.cols + j + c1.cols] = c2[i * c2.cols + j];
-			C[(i + c1.rows) * C.cols + j] = c3[i * c3.cols + j];
+			C[i * C.cols + j]                       = c1[i * c1.cols + j];
+			C[i * C.cols + j + c1.cols]             = c2[i * c2.cols + j];
+			C[(i + c1.rows) * C.cols + j]           = c3[i * c3.cols + j];
 			C[(i + c1.rows) * C.cols + j + c1.cols] = c4[i * c4.cols + j];
 		}
 	}
