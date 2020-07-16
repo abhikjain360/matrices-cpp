@@ -6,11 +6,8 @@ SRC 	= $(wildcard *.cpp)
 app: $(SRC)
 	$(CXX) $(CFLAGS) -O3 $^ -o main
 
-run:
-	./main
-
-test:
-	make && make run
+test: $(SRC)
+	$(CXX) $(CFLAGS) -O3 $^ -o main	&& ./main
 
 debug: $(SRC)
 	$(CXX) $(CFLAGS) -g $^ -o main && gdb ./main
@@ -18,5 +15,5 @@ debug: $(SRC)
 clean:
 	rm -f main
 
-time:
-	make && time ./main
+time: $(SRC)
+	$(CXX) $(CFLAGS) -O3 $^ -o main && time ./main
