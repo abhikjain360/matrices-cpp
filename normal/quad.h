@@ -53,6 +53,9 @@ public:
 	   instead of shared pointer sharing */
 	matrix<T> tomatrix() const;
 
+	/* cloning */
+	quad<T> clone() const;
+
 public:
 	unsigned int rows, cols;
 private:
@@ -154,13 +157,23 @@ std::ostream& operator << (std::ostream& output, const quad<T>& A)
 	return output;
 }
 
+/* cloning */
+template<typename T>
+quad<T> quad<T>::clone() const
+{
+	quad B(this->rows, this->cols);
+	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
+		B[i] = (*this)[i];
+	return B;
+}
+
 
 // logical operators
 //------------------
 
 /* equality */
 template <typename T>
-bool operator == (const matrix<T>& A, const matrix<T>& B)
+bool operator == (const quad<T>& A, const quad<T>& B)
 {
 	if (!(A.rows == B.rows && A.cols == B.cols))
 		return false;
@@ -170,17 +183,6 @@ bool operator == (const matrix<T>& A, const matrix<T>& B)
 			return false;
 	}
 	return true;
-}
-
-template <typename T>
-matrix<T> quad<T>::tomatrix() const
-{
-	matrix<T> C(this->rows, this->cols);
-
-	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
-		C[i] = this[i];
-
-	return C;
 }
 
 
@@ -227,7 +229,7 @@ quad<T> operator * (const quad<T>& A, const quad<T>& B)
 {
 	ASSERT(A.cols == B.rows);
 
-	if (A.cols > 1024 && float(A.rows) / A.cols > 0.7)
+	if (A.cols > 4096 && float(A.rows) / A.cols > 0.7)
 		return strassen(A, B);
 	return normal_matmul(A, B);
 }
@@ -253,6 +255,13 @@ quad<T> strassen(const quad<T>& A, const quad<T>& B)
 {
 	ASSERT(A.cols == B.rows);
 
+	//if (A.cols == A.rows == B.cols == B.rows && A.cols <= 2) {
+	//	return normal_matmul(A, B);
+	//}
+
+	if (A.cols < 2)
+		return normal_matmul(A, B);
+
 	// getting the quater submatrices
 	quad<T> a = A.subquad(0, (A.rows - 1)/2 * A.cols + A.cols / 2 - 1),
 	        b = A.subquad(A.cols / 2, (A.rows - 1)/2 * A.cols + A.cols - 1),
@@ -266,10 +275,10 @@ quad<T> strassen(const quad<T>& A, const quad<T>& B)
 
 	// matrices needed for strassen
 	quad<T> p1 = (a + d) * (e + h),
-	        p2 = (c + d) * e,
-	        p3 = a * (f - h),
-	        p4 = d * (g - e),
-	        p5 = (a + b) * h,
+	        p2 = (c + d) * e.clone(),
+	        p3 = a.clone() * (f - h),
+	        p4 = d.clone() * (g - e),
+	        p5 = (a + b) * h.clone(),
 	        p6 = (c - a) * (e + f),
 	        p7 = (b - d) * (g + h);
 
