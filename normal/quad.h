@@ -45,10 +45,8 @@ public:
 	/* deconstructor */
 	~quad();
 
-	/* easy indexing */
+	/* utility */
 	T& operator [] (unsigned int index) const;
-
-	/* easy subquading */
 	quad subquad(unsigned int index1, unsigned int index2) const;
 
 	/* quad to matrices, copies values
@@ -57,6 +55,33 @@ public:
 
 	/* cloning */
 	quad<T> clone() const;
+
+	/* default matrices */
+	static quad<T> eye(unsigned int dim);
+	static quad<T> zero(unsigned int dim);
+	static quad<T> zero(unsigned int dim1, unsigned int dim2);
+
+	/* elementary operations */
+	void rowOp(
+	    const int* src, const unsigned int dest,
+	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	);
+	void colOp(
+	    const int* src, const unsigned int dest,
+	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	);
+
+	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
+	void colOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
+
+	void rowOpAdd(const unsigned int* dest, const T val, const unsigned int size = 1);
+	void colOpAdd(const unsigned int* dest, const T val, const unsigned int size = 1);
+
+	void rowOpMul(const T val, const unsigned int* dest, const unsigned int size = 1);
+	void colOpMul(const T val, const unsigned int* dest, const unsigned int size = 1);
+
+	void rowOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
+	void colOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
 
 public:
 	unsigned int rows, cols;
@@ -167,6 +192,39 @@ quad<T> quad<T>::clone() const
 	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
 		B[i] = (*this)[i];
 	return B;
+}
+
+
+// default matrices
+//-----------------
+
+/* identity quad */
+template <typename T>
+quad<T> quad<T>::eye(unsigned int dim)
+{
+	quad<T> m(dim, dim);
+	memset(&(m.arr), 0, sizeof(T) * dim * dim);
+
+	for (unsigned int i = 0; i < dim; ++i)
+		m[(dim + 1) * i] = 1;
+
+	return m;
+}
+
+/* zero quad */
+template <typename T>
+quad<T> quad<T>::zero(unsigned int dim1, unsigned int dim2)
+{
+	quad<T> m(dim1, dim2);
+	memset(&(m.arr), 0, sizeof(T) * dim1 * dim2);
+	return m;
+}
+template <typename T>
+quad<T> quad<T>::zero(unsigned int dim)
+{
+	quad<T> m(dim, dim);
+	memset(&(m.arr), 0, sizeof(T) * dim * dim);
+	return m;
 }
 
 
