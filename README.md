@@ -11,10 +11,9 @@ Matrix library once made will act as a base for other things like optimization t
 - [X] Basic operations
 - [X] New class for submatrices
 - [X] Normal implementation for comparision
-- [ ] Add strassen's algorithm for multiplication
-- [ ] Use templates
+- [X] Add strassen's algorithm for multiplication
+- [X] Use templates
 - [ ] Optimize for special cases like single row/column matrices, identity matrices etc.
-- [ ] Complex numbers support
 - [ ] Shell scripts for automated testing & benchmarking
 - [ ] Test with other threadpool libraries to see if performance improves
 - [ ] GPU acceleration using OpenACC or OpenGL
