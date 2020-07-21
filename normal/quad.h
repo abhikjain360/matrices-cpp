@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <memory>
+#include <cstring>
+#include <cmath>
 
 #define ASSERT(x) if(!(x)) { print_matrix_error(#x, __FILE__, __LINE__);exit(-1); };
 
@@ -133,10 +135,10 @@ T& quad<T>::operator [] (unsigned int index) const
 template <typename T>
 quad<T> quad<T>::subquad(unsigned int index1, unsigned int index2) const
 {
-	unsigned int row_offset = index1 / this->cols,
-	             col_offset = index1 % this->cols,
-	             rows = (index2 / this->cols) - row_offset + 1,
-	             cols = (index2 % this->cols) - col_offset + 1;
+	unsigned int row_offset =  index1 / this->cols,
+	             col_offset =  index1 % this->cols,
+	             rows       = (index2 / this->cols) - row_offset + 1,
+	             cols       = (index2 % this->cols) - col_offset + 1;
 
 	return quad<T>(rows, cols, arr, this->cols, row_offset, col_offset);
 }
