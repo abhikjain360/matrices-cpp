@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "quad.h"
 
 template <typename T> class matrix {
@@ -12,28 +11,25 @@ public:
 	/* deconstructor */
 	~matrix();
 
-	/* easy indexing */
+	/* utility */
 	T &operator[](unsigned int index) const;
-
-	/* sub-matricing */
 	quad<T> subquad(unsigned int index1, unsigned int index2) const;
+	void transpose();
 
+	/* default matrices */
 	static matrix<T> eye(unsigned int dim);
 	static matrix<T> zero(unsigned int dim);
 	static matrix<T> zero(unsigned int dim1, unsigned int dim2);
 
 	/* elementary operations */
-	void rowOp(int src, unsigned int dest);
-	void colOp(int src, unsigned int dest);
+	void rowOp(const int* src, const unsigned int dest, const T* coeff = &(const int&)1, const unsigned int size = 1);
+	void colOp(const int* src, const unsigned int dest, const T* coeff = &(const int&)1, const unsigned int size = 1);
 
-	void rowOp(int src, T coeff, unsigned int dest);
-	void colOp(int src, T coeff, unsigned int dest);
+	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
+	void colOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
 
-	void rowOp(int* src, unsigned int size, unsigned int dest);
-	void colOp(int* src, unsigned int size, unsigned int dest);
-
-	void rowOp(int* src, T* coeff, unsigned int size, unsigned int dest);
-	void colOp(int* src, T* coeff, unsigned int size, unsigned int dest);
+	void rowOpMul(const T val, const unsigned int* dest, const unsigned int size = 1);
+	void colOpMul(const T val, const unsigned int* dest, const unsigned int size = 1);
 
 public:
 	unsigned int rows, cols;
@@ -57,6 +53,7 @@ inline matrix<T>::matrix(unsigned int rows, unsigned int cols)
 
 /* deconstructor */
 template <typename T> inline matrix<T>::~matrix() {}
+
 
 // utility functions
 //------------------
@@ -315,4 +312,36 @@ matrix<T> operator / (const float t, const matrix<T> &A)
 	return C;
 }
 
-// elementary row operations
+// elementary operations
+//----------------------
+
+/* NOTE: += or -= operators not used because T might not implement them */
+template<typename T>
+void matrix<T>::rowOp(const int* src, const unsigned int dest, const T* coeff, const unsigned int size)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                      + ((*this)[src[j]*cols + i] * coeff[j]);
+			else
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                      - ((*this)[-src[j]*cols + i] * coeff[j]);
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::colOp(const int* src, const unsigned int dest, const T* coeff, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                      + ((*this)[i*cols + src[j]] * coeff[j]);
+			else
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                      - ((*this)[i*cols - src[j]] * coeff[j]);
+		}
+	}
+}
