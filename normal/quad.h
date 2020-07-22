@@ -62,22 +62,40 @@ public:
 	static quad<T> zero(unsigned int dim1, unsigned int dim2);
 
 	/* elementary operations */
-	void rowOp(
-	    const int* src, const unsigned int dest,
+	void rowOp( //
+	    const int* src, const T* coeff,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+	void colOp( //
+	    const int* src, const T* coeff,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+
+	void rowOp( //
+	    const unsigned int dest, const int* src,
 	    const T* coeff, const unsigned int size = 1
 	);
-	void colOp(
-	    const int* src, const unsigned int dest,
+	void colOp( //
+	    const unsigned int dest, const int* src,
 	    const T* coeff, const unsigned int size = 1
 	);
 
+	void rowOp( //
+	    const T* coeff, const int* src,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+	void colOp( //
+	    const T* coeff, const int* src,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+
 	void rowOp(
-	    const unsigned int dest, const int* src,
-	    const T* coeff, const unsigned int size = 1
+	    const unsigned int dest, const T* coeff,
+	    const int* src, const unsigned int size = 1
 	);
 	void colOp(
-	    const unsigned int dest, const int* src,
-	    const T* coeff, const unsigned int size = 1
+	    const unsigned int dest, const T* coeff,
+	    const int* src, const unsigned int size = 1
 	);
 
 	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
@@ -91,6 +109,8 @@ public:
 
 	void rowOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
 	void colOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
+
+	void echelon();
 
 public:
 	unsigned int rows, cols;
@@ -448,8 +468,44 @@ quad<T> operator / (const T t, const quad<T> &A)
 /* NOTE: += or -= operators not used because T might not implement them */
 template<typename T>
 void quad<T>::rowOp(
-	const int* src, const unsigned int dest,
-	const T* coeff, const unsigned int size
+    const int* src, const T* coeff,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = ((*this)[src[j]*cols + i] * coeff[j])
+				                         + (*this)[dest*cols + i];
+			else
+				(*this)[dest*cols + i] = ((*this)[-src[j]*cols + i] * coeff[j])
+				                         - (*this)[dest*cols + i];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOp(
+    const int* src, const T* coeff,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = ((*this)[i*cols + src[j]] * coeff[j])
+				                         + (*this)[i*cols + dest];
+			else
+				(*this)[i*cols + dest] = ((*this)[i*cols + src[j]] * coeff[j])
+				                         - (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOp(
+    const unsigned int dest, const int* src,
+    const T* coeff, const unsigned int size
 )
 {
 	for (unsigned int i = 0; i < cols; ++i) {
@@ -466,8 +522,8 @@ void quad<T>::rowOp(
 
 template<typename T>
 void quad<T>::colOp(
-	const int* src, const unsigned int dest,
-	const T* coeff, const unsigned int size
+    const unsigned int dest, const int* src,
+    const T* coeff, const unsigned int size
 )
 {
 	for (unsigned int i = 0; i < rows; ++i) {
@@ -478,6 +534,78 @@ void quad<T>::colOp(
 			else
 				(*this)[i*cols + dest] = (*this)[i*cols + dest]
 				                         - ((*this)[i*cols - src[j]] * coeff[j]);
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOp(
+    const T* coeff, const int* src,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (coeff[j] * (*this)[src[j]*cols + i])
+				                         + (*this)[dest*cols + i];
+			else
+				(*this)[dest*cols + i] = (coeff[j] * (*this)[src[j]*cols + i])
+				                         - (*this)[dest*cols + i];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOp(
+    const T* coeff, const int* src,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (coeff[j] * (*this)[i*cols + src[j]])
+				                         + (*this)[i*cols + dest];
+			else
+				(*this)[i*cols + dest] = (coeff[j] * (*this)[i*cols - src[j]])
+				                         + (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOp(
+    const unsigned int dest, const T* coeff,
+    const int* src, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         + (coeff[j] * (*this)[src[j]*cols + i]);
+			else
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         - (coeff[j] * (*this)[-src[j]*cols + i]);
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOp(
+    const unsigned int dest, const T* coeff,
+    const int* src, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         + (coeff[j] * (*this)[i*cols + src[j]]);
+			else
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         - (coeff[j] * (*this)[i*cols - src[j]]);
 		}
 	}
 }
@@ -558,6 +686,25 @@ void quad<T>::colOpMul(const unsigned int* dest, const T val, const unsigned int
 	for (unsigned int i = 0; i < rows; ++i) {
 		for (unsigned int j = 0; j < cols; ++j) {
 				(*this)[i*cols + dest] =(*this)[i*cols + dest] * val;
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::echelon()
+{
+	const unsigned int limit = (rows > cols ? rows : cols) - 1;
+
+	for (unsigned int i = 0; i < limit-1; --i) {
+		if ((*this)[i*cols + i] == (T)0)
+			continue;
+		for (unsigned int j = i+1; j < limit-i; ++j) {
+			if ((*this)[j*cols + i] != (T)0) {
+				T coeff = -(*this)[i*cols + i] / (*this)[j*cols + i];
+				this->rowOp(&i, &coeff, j);
+			}
+			else
+				continue;
 		}
 	}
 }

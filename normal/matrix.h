@@ -2,7 +2,8 @@
 
 #include "quad.h"
 
-template <typename T> class matrix {
+template<typename T>
+class matrix {
 public:
 	/* constructors */
 	matrix(unsigned int rows, unsigned int cols, std::shared_ptr<T[]> arr);
@@ -22,22 +23,40 @@ public:
 	static matrix<T> zero(unsigned int dim1, unsigned int dim2);
 
 	/* elementary operations */
-	void rowOp(
-	    const int* src, const unsigned int dest,
+	void rowOp( //
+	    const int* src, const T* coeff,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+	void colOp( //
+	    const int* src, const T* coeff,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+
+	void rowOp( //
+	    const unsigned int dest, const int* src,
 	    const T* coeff, const unsigned int size = 1
 	);
-	void colOp(
-	    const int* src, const unsigned int dest,
+	void colOp( //
+	    const unsigned int dest, const int* src,
 	    const T* coeff, const unsigned int size = 1
 	);
 
+	void rowOp( //
+	    const T* coeff, const int* src,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+	void colOp( //
+	    const T* coeff, const int* src,
+	    const unsigned int dest, const unsigned int size = 1
+	);
+
 	void rowOp(
-	    const unsigned int dest, const int* src,
-	    const T* coeff, const unsigned int size = 1
+	    const unsigned int dest, const T* coeff,
+	    const int* src, const unsigned int size = 1
 	);
 	void colOp(
-	    const unsigned int dest, const int* src,
-	    const T* coeff, const unsigned int size = 1
+	    const unsigned int dest, const T* coeff,
+	    const int* src, const unsigned int size = 1
 	);
 
 	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
@@ -52,6 +71,8 @@ public:
 	void rowOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
 	void colOpMul(const unsigned int* dest, const T val, const unsigned int size = 1);
 
+	void echelon();
+
 public:
 	unsigned int rows, cols;
 
@@ -60,13 +81,13 @@ private:
 };
 
 /* constructors */
-template <typename T>
+template<typename T>
 inline
 matrix<T>::matrix(unsigned int rows, unsigned int cols,
-                         std::shared_ptr<T[]> arr)
+                  std::shared_ptr<T[]> arr)
 	: rows(rows), cols(cols), arr(arr) {}
 
-template <typename T>
+template<typename T>
 inline
 matrix<T>::matrix(unsigned int rows, unsigned int cols)
 	: rows(rows), cols(cols)
@@ -75,14 +96,16 @@ matrix<T>::matrix(unsigned int rows, unsigned int cols)
 }
 
 /* deconstructor */
-template <typename T> inline matrix<T>::~matrix() {}
+template<typename T>
+inline
+matrix<T>::~matrix() {}
 
 
 // utility functions
 //------------------
 
 /* easy indexing */
-template <typename T>
+template<typename T>
 inline
 T &matrix<T>::operator[](unsigned int index) const
 {
@@ -90,7 +113,7 @@ T &matrix<T>::operator[](unsigned int index) const
 }
 
 /* sub-matricing */
-template <typename T>
+template<typename T>
 quad<T> matrix<T>::subquad(unsigned int index1, unsigned int index2) const
 {
 	unsigned int row_offset = index1 / this->cols,
@@ -101,7 +124,7 @@ quad<T> matrix<T>::subquad(unsigned int index1, unsigned int index2) const
 	return quad<T>(rows, cols, arr, this->cols, row_offset, col_offset);
 }
 
-template <typename T>
+template<typename T>
 std::ostream &operator<<(std::ostream &output, const matrix<T> &A)
 {
 	output << "============================\n";
@@ -122,7 +145,7 @@ std::ostream &operator<<(std::ostream &output, const matrix<T> &A)
 //-----------------
 
 /* identity matrix */
-template <typename T>
+template<typename T>
 matrix<T> matrix<T>::eye(unsigned int dim)
 {
 	matrix<T> m(dim, dim);
@@ -135,14 +158,14 @@ matrix<T> matrix<T>::eye(unsigned int dim)
 }
 
 /* zero matrix */
-template <typename T>
+template<typename T>
 matrix<T> matrix<T>::zero(unsigned int dim1, unsigned int dim2)
 {
 	matrix<T> m(dim1, dim2);
 	memset(&(m.arr), 0, sizeof(T) * dim1 * dim2);
 	return m;
 }
-template <typename T>
+template<typename T>
 matrix<T> matrix<T>::zero(unsigned int dim)
 {
 	matrix<T> m(dim, dim);
@@ -155,7 +178,8 @@ matrix<T> matrix<T>::zero(unsigned int dim)
 //------------------
 
 /* equality */
-template <typename T> bool operator==(const matrix<T> &A, const matrix<T> &B)
+template<typename T>
+bool operator==(const matrix<T> &A, const matrix<T> &B)
 {
 	if (!(A.rows == B.rows && A.cols == B.cols))
 		return false;
@@ -167,14 +191,28 @@ template <typename T> bool operator==(const matrix<T> &A, const matrix<T> &B)
 	return true;
 }
 
+/* negation */
+template<typename T>
+matrix<T> operator-(const matrix<T> &A)
+{
+	matrix<T> C(A.rows, A.cols);
+
+	for (unsigned int i = 0; i < A.rows; ++i)
+		for (unsigned int j = 0; j < A.cols; ++j)
+			C[i*A.cols + j] = -A[i*A.cols + j];
+
+	return C;
+}
+
+
 // basic operation
 //----------------
 
 /* addition */
-template <typename T>
+template<typename T>
 matrix<T> operator+(const matrix<T> &A, const matrix<T> &B)
 {
-	ASSERT(A.rows == B.rows && A.cols == B.cols);
+	ASSERT(A.rows == B.rows && A.cols == B.cols)
 
 	matrix<T> C(A.rows, A.cols);
 
@@ -187,10 +225,10 @@ matrix<T> operator+(const matrix<T> &A, const matrix<T> &B)
 }
 
 /* subtraction */
-template <typename T>
+template<typename T>
 matrix<T> operator-(const matrix<T> &A, const matrix<T> &B)
 {
-	ASSERT(A.rows == B.rows && A.cols == B.cols);
+	ASSERT(A.rows == B.rows && A.cols == B.cols)
 
 	matrix<T> C(A.rows, A.cols);
 
@@ -203,16 +241,16 @@ matrix<T> operator-(const matrix<T> &A, const matrix<T> &B)
 }
 
 /* multiplication */
-template <typename T>
+template<typename T>
 matrix<T> operator*(const matrix<T> &A, const matrix<T> &B)
 {
-	ASSERT(A.cols == B.rows);
+	ASSERT(A.cols == B.rows)
 	if (A.cols > 4096 && float(A.rows) / A.cols > 0.7)
 		return strassen(A, B);
 	return normal_matmul(A, B);
 }
 
-template <typename T>
+template<typename T>
 matrix<T> normal_matmul(const matrix<T> &A, const matrix<T> &B)
 {
 	matrix<T> C(A.rows, B.cols);
@@ -228,10 +266,10 @@ matrix<T> normal_matmul(const matrix<T> &A, const matrix<T> &B)
 	return C;
 }
 
-template <typename T>
+template<typename T>
 matrix<T> strassen(const matrix<T> &A, const matrix<T> &B)
 {
-	ASSERT(A.cols == B.rows);
+	ASSERT(A.cols == B.rows)
 
 	// getting the quater submatrices
 	quad<T> a = A.subquad(0, (A.rows - 1) / 2 * A.cols + A.cols / 2 - 1),
@@ -248,16 +286,16 @@ matrix<T> strassen(const matrix<T> &A, const matrix<T> &B)
 
 	// matrices needed for strassen
 	quad<T> p1 = (a + d) * (e + h),
-			p2 = (c + d) * e,
-			p3 = a * (f - h),
+	        p2 = (c + d) * e,
+	        p3 = a * (f - h),
 	        p4 = d * (g - e),
-			p5 = (a + b) * h,
-			p6 = (c - a) * (e + f),
+	        p5 = (a + b) * h,
+	        p6 = (c - a) * (e + f),
 	        p7 = (b - d) * (g + h);
 
 	quad<T> c1 = p1 + p4 + p7 - p5,
-			c2 = p3 + p5,
-			c3 = p2 + p4,
+	        c2 = p3 + p5,
+	        c3 = p2 + p4,
 	        c4 = p1 + p3 + p6 - p2;
 
 	matrix<T> C(A.rows, B.cols);
@@ -278,7 +316,7 @@ matrix<T> strassen(const matrix<T> &A, const matrix<T> &B)
 //  scalar operations
 //-------------------
 
-template <typename T>
+template<typename T>
 matrix<T> operator * (const matrix<T> &A, const T t)
 {
 	matrix<T> C(A.rows, A.cols);
@@ -292,7 +330,7 @@ matrix<T> operator * (const matrix<T> &A, const T t)
 	return C;
 }
 
-template <typename T>
+template<typename T>
 matrix<T> operator * (const T t, const matrix<T> &A)
 {
 	matrix<T> C(A.rows, A.cols);
@@ -306,7 +344,7 @@ matrix<T> operator * (const T t, const matrix<T> &A)
 	return C;
 }
 
-template <typename T>
+template<typename T>
 matrix<T> operator / (const matrix<T> &A, const T t)
 {
 	matrix<T> C(A.rows, A.cols);
@@ -320,7 +358,7 @@ matrix<T> operator / (const matrix<T> &A, const T t)
 	return C;
 }
 
-template <typename T>
+template<typename T>
 matrix<T> operator / (const T t, const matrix<T> &A)
 {
 	matrix<T> C(A.rows, A.cols);
@@ -341,8 +379,44 @@ matrix<T> operator / (const T t, const matrix<T> &A)
 /* NOTE: += or -= operators not used because T might not implement them */
 template<typename T>
 void matrix<T>::rowOp(
-	const int* src, const unsigned int dest,
-	const T* coeff, const unsigned int size
+    const int* src, const T* coeff,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = ((*this)[src[j]*cols + i] * coeff[j])
+				                         + (*this)[dest*cols + i];
+			else
+				(*this)[dest*cols + i] = ((*this)[-src[j]*cols + i] * coeff[j])
+				                         - (*this)[dest*cols + i];
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::colOp(
+    const int* src, const T* coeff,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = ((*this)[i*cols + src[j]] * coeff[j])
+				                         + (*this)[i*cols + dest];
+			else
+				(*this)[i*cols + dest] = ((*this)[i*cols + src[j]] * coeff[j])
+				                         - (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::rowOp(
+    const unsigned int dest, const int* src,
+    const T* coeff, const unsigned int size
 )
 {
 	for (unsigned int i = 0; i < cols; ++i) {
@@ -359,8 +433,8 @@ void matrix<T>::rowOp(
 
 template<typename T>
 void matrix<T>::colOp(
-	const int* src, const unsigned int dest,
-	const T* coeff, const unsigned int size
+    const unsigned int dest, const int* src,
+    const T* coeff, const unsigned int size
 )
 {
 	for (unsigned int i = 0; i < rows; ++i) {
@@ -371,6 +445,78 @@ void matrix<T>::colOp(
 			else
 				(*this)[i*cols + dest] = (*this)[i*cols + dest]
 				                         - ((*this)[i*cols - src[j]] * coeff[j]);
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::rowOp(
+    const T* coeff, const int* src,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (coeff[j] * (*this)[src[j]*cols + i])
+				                         + (*this)[dest*cols + i];
+			else
+				(*this)[dest*cols + i] = (coeff[j] * (*this)[src[j]*cols + i])
+				                         - (*this)[dest*cols + i];
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::colOp(
+    const T* coeff, const int* src,
+    const unsigned int dest, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (coeff[j] * (*this)[i*cols + src[j]])
+				                         + (*this)[i*cols + dest];
+			else
+				(*this)[i*cols + dest] = (coeff[j] * (*this)[i*cols - src[j]])
+				                         + (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::rowOp(
+    const unsigned int dest, const T* coeff,
+    const int* src, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         + (coeff[j] * (*this)[src[j]*cols + i]);
+			else
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         - (coeff[j] * (*this)[-src[j]*cols + i]);
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::colOp(
+    const unsigned int dest, const T* coeff,
+    const int* src, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         + (coeff[j] * (*this)[i*cols + src[j]]);
+			else
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         - (coeff[j] * (*this)[i*cols - src[j]]);
 		}
 	}
 }
@@ -390,7 +536,7 @@ void matrix<T>::colOpAdd(const T val, const unsigned int* dest, const unsigned i
 {
 	for (unsigned int i = 0; i < rows; ++i) {
 		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
+			(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
 		}
 	}
 }
@@ -410,7 +556,7 @@ void matrix<T>::colOpAdd(const unsigned int* dest, const T val, const unsigned i
 {
 	for (unsigned int i = 0; i < rows; ++i) {
 		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] =(*this)[i*cols + dest] + val;
+			(*this)[i*cols + dest] =(*this)[i*cols + dest] + val;
 		}
 	}
 }
@@ -430,7 +576,7 @@ void matrix<T>::colOpMul(const T val, const unsigned int* dest, const unsigned i
 {
 	for (unsigned int i = 0; i < rows; ++i) {
 		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] = val * (*this)[i*cols + dest];
+			(*this)[i*cols + dest] = val * (*this)[i*cols + dest];
 		}
 	}
 }
@@ -450,7 +596,26 @@ void matrix<T>::colOpMul(const unsigned int* dest, const T val, const unsigned i
 {
 	for (unsigned int i = 0; i < rows; ++i) {
 		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] =(*this)[i*cols + dest] * val;
+			(*this)[i*cols + dest] =(*this)[i*cols + dest] * val;
+		}
+	}
+}
+
+template<typename T>
+void matrix<T>::echelon()
+{
+	const unsigned int limit = (rows > cols ? rows : cols) - 1;
+
+	for (unsigned int i = 0; i < limit-1; --i) {
+		if ((*this)[i*cols + i] == (T)0)
+			continue;
+		for (unsigned int j = i+1; j < limit-i; ++j) {
+			if ((*this)[j*cols + i] != (T)0) {
+				T coeff = -(*this)[i*cols + i] / (*this)[j*cols + i];
+				this->rowOp(&i, &coeff, j);
+			}
+			else
+				continue;
 		}
 	}
 }
