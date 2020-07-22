@@ -13,7 +13,7 @@ debug: $(SRC)
 	$(CXX) $(CFLAGS) -g $^ -o main && gdb ./main
 
 clean:
-	rm -f main
+	rm -f main matrix
 
 time: $(SRC)
 	$(CXX) $(CFLAGS) -O3 $^ -o main && time ./main
