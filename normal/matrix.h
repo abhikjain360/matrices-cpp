@@ -24,11 +24,20 @@ public:
 	/* elementary operations */
 	void rowOp(
 	    const int* src, const unsigned int dest,
-	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	    const T* coeff, const unsigned int size = 1
 	);
 	void colOp(
 	    const int* src, const unsigned int dest,
-	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	    const T* coeff, const unsigned int size = 1
+	);
+
+	void rowOp(
+	    const unsigned int dest, const int* src,
+	    const T* coeff, const unsigned int size = 1
+	);
+	void colOp(
+	    const unsigned int dest, const int* src,
+	    const T* coeff, const unsigned int size = 1
 	);
 
 	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
@@ -52,12 +61,14 @@ private:
 
 /* constructors */
 template <typename T>
-inline matrix<T>::matrix(unsigned int rows, unsigned int cols,
+inline
+matrix<T>::matrix(unsigned int rows, unsigned int cols,
                          std::shared_ptr<T[]> arr)
 	: rows(rows), cols(cols), arr(arr) {}
 
 template <typename T>
-inline matrix<T>::matrix(unsigned int rows, unsigned int cols)
+inline
+matrix<T>::matrix(unsigned int rows, unsigned int cols)
 	: rows(rows), cols(cols)
 {
 	this->arr = std::shared_ptr<T[]>(new int[rows * cols]);
@@ -72,7 +83,8 @@ template <typename T> inline matrix<T>::~matrix() {}
 
 /* easy indexing */
 template <typename T>
-inline T &matrix<T>::operator[](unsigned int index) const
+inline
+T &matrix<T>::operator[](unsigned int index) const
 {
 	return arr[index];
 }
@@ -155,16 +167,6 @@ template <typename T> bool operator==(const matrix<T> &A, const matrix<T> &B)
 	return true;
 }
 
-template <typename T> matrix<T> quad<T>::tomatrix() const
-{
-	matrix<T> C(this->rows, this->cols);
-
-	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
-		C[i] = this[i];
-
-	return C;
-}
-
 // basic operation
 //----------------
 
@@ -245,26 +247,33 @@ matrix<T> strassen(const matrix<T> &A, const matrix<T> &B)
 	            h = B.subquad(B.rows * B.cols / 2 + B.cols / 2, B.rows * B.cols - 1);
 
 	// matrices needed for strassen
-	quad<T> p1 = (a + d) * (e + h), p2 = (c + d) * e, p3 = a * (f - h),
-	        p4 = d * (g - e), p5 = (a + b) * h, p6 = (c - a) * (e + f),
+	quad<T> p1 = (a + d) * (e + h),
+			p2 = (c + d) * e,
+			p3 = a * (f - h),
+	        p4 = d * (g - e),
+			p5 = (a + b) * h,
+			p6 = (c - a) * (e + f),
 	        p7 = (b - d) * (g + h);
 
-	quad<T> c1 = p1 + p4 + p7 - p5, c2 = p3 + p5, c3 = p2 + p4,
+	quad<T> c1 = p1 + p4 + p7 - p5,
+			c2 = p3 + p5,
+			c3 = p2 + p4,
 	        c4 = p1 + p3 + p6 - p2;
 
 	matrix<T> C(A.rows, B.cols);
 
 	for (unsigned int i = 0; i < c1.rows; ++i) {
 		for (unsigned int j = 0; j < c1.cols; ++j) {
-			C[i * C.cols + j] = c1[i * c1.cols + j];
-			C[i * C.cols + j + c1.cols] = c2[i * c2.cols + j];
-			C[(i + c1.rows) * C.cols + j] = c3[i * c3.cols + j];
+			C[i * C.cols + j]                       = c1[i * c1.cols + j];
+			C[i * C.cols + j + c1.cols]             = c2[i * c2.cols + j];
+			C[(i + c1.rows) * C.cols + j]           = c3[i * c3.cols + j];
 			C[(i + c1.rows) * C.cols + j + c1.cols] = c4[i * c4.cols + j];
 		}
 	}
 
 	return C;
 }
+
 
 //  scalar operations
 //-------------------
@@ -325,6 +334,7 @@ matrix<T> operator / (const T t, const matrix<T> &A)
 	return C;
 }
 
+
 // elementary operations
 //----------------------
 
@@ -361,46 +371,6 @@ void matrix<T>::colOp(
 			else
 				(*this)[i*cols + dest] = (*this)[i*cols + dest]
 				                         - ((*this)[i*cols - src[j]] * coeff[j]);
-		}
-	}
-}
-
-template<typename T>
-void matrix<T>::rowOpAdd(const T val, const unsigned int* dest, const unsigned int size)
-{
-	for (unsigned int i = 0; i < rows; ++i) {
-		for (unsigned int j = 0; j < cols; ++j) {
-			(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
-		}
-	}
-}
-
-template<typename T>
-void matrix<T>::colOpAdd(const T val, const unsigned int* dest, const unsigned int size)
-{
-	for (unsigned int i = 0; i < rows; ++i) {
-		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
-		}
-	}
-}
-
-template<typename T>
-void matrix<T>::rowOpAdd(const unsigned int* dest, const T val, const unsigned int size)
-{
-	for (unsigned int i = 0; i < rows; ++i) {
-		for (unsigned int j = 0; j < cols; ++j) {
-			(*this)[i*cols + dest] = (*this)[i*cols + dest] + val;
-		}
-	}
-}
-
-template<typename T>
-void matrix<T>::colOpAdd(const unsigned int* dest, const T val, const unsigned int size)
-{
-	for (unsigned int i = 0; i < rows; ++i) {
-		for (unsigned int j = 0; j < cols; ++j) {
-				(*this)[i*cols + dest] =(*this)[i*cols + dest] + val;
 		}
 	}
 }
