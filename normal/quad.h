@@ -64,11 +64,20 @@ public:
 	/* elementary operations */
 	void rowOp(
 	    const int* src, const unsigned int dest,
-	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	    const T* coeff, const unsigned int size = 1
 	);
 	void colOp(
 	    const int* src, const unsigned int dest,
-	    const T* coeff = &(const int&)1, const unsigned int size = 1
+	    const T* coeff, const unsigned int size = 1
+	);
+
+	void rowOp(
+	    const unsigned int dest, const int* src,
+	    const T* coeff, const unsigned int size = 1
+	);
+	void colOp(
+	    const unsigned int dest, const int* src,
+	    const T* coeff, const unsigned int size = 1
 	);
 
 	void rowOpAdd(const T val, const unsigned int* dest, const unsigned int size = 1);
@@ -192,6 +201,17 @@ quad<T> quad<T>::clone() const
 	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
 		B[i] = (*this)[i];
 	return B;
+}
+
+/* quad to matrix */
+template <typename T> matrix<T> quad<T>::tomatrix() const
+{
+	matrix<T> C(this->rows, this->cols);
+
+	for (unsigned int i = 0; i < this->rows * this->cols; ++i)
+		C[i] = this[i];
+
+	return C;
 }
 
 
@@ -359,4 +379,185 @@ quad<T> strassen(const quad<T>& A, const quad<T>& B)
 	}
 
 	return C;
+}
+
+
+//  scalar operations
+//-------------------
+
+template <typename T>
+quad<T> operator * (const quad<T> &A, const T t)
+{
+	quad<T> C(A.rows, A.cols);
+
+	for (unsigned int i = 0; i < A.rows; ++i) {
+		for (unsigned int j = 0; j < A.cols; ++j) {
+			C[i * A.cols + j] = A[i * A.cols + j] * t;
+		}
+	}
+
+	return C;
+}
+
+template <typename T>
+quad<T> operator * (const T t, const quad<T> &A)
+{
+	quad<T> C(A.rows, A.cols);
+
+	for (unsigned int i = 0; i < A.rows; ++i) {
+		for (unsigned int j = 0; j < A.cols; ++j) {
+			C[i * A.cols + j] = t * A[i * A.cols + j];
+		}
+	}
+
+	return C;
+}
+
+template <typename T>
+quad<T> operator / (const quad<T> &A, const T t)
+{
+	quad<T> C(A.rows, A.cols);
+
+	for (unsigned int i = 0; i < A.rows; ++i) {
+		for (unsigned int j = 0; j < A.cols; ++j) {
+			C[i * A.cols + j] = A[i * A.cols + j] / t;
+		}
+	}
+
+	return C;
+}
+
+template <typename T>
+quad<T> operator / (const T t, const quad<T> &A)
+{
+	quad<T> C(A.rows, A.cols);
+
+	for (unsigned int i = 0; i < A.rows; ++i) {
+		for (unsigned int j = 0; j < A.cols; ++j) {
+			C[i * A.cols + j] = t / A[i * A.cols + j];
+		}
+	}
+
+	return C;
+}
+
+
+// elementary operations
+//----------------------
+
+/* NOTE: += or -= operators not used because T might not implement them */
+template<typename T>
+void quad<T>::rowOp(
+	const int* src, const unsigned int dest,
+	const T* coeff, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < cols; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         + ((*this)[src[j]*cols + i] * coeff[j]);
+			else
+				(*this)[dest*cols + i] = (*this)[dest*cols + i]
+				                         - ((*this)[-src[j]*cols + i] * coeff[j]);
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOp(
+	const int* src, const unsigned int dest,
+	const T* coeff, const unsigned int size
+)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < size; ++j) {
+			if (src[j] > 0)
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         + ((*this)[i*cols + src[j]] * coeff[j]);
+			else
+				(*this)[i*cols + dest] = (*this)[i*cols + dest]
+				                         - ((*this)[i*cols - src[j]] * coeff[j]);
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOpAdd(const T val, const unsigned int* dest, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+			(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOpAdd(const T val, const unsigned int* dest, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+				(*this)[i*cols + dest] = val + (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOpAdd(const unsigned int* dest, const T val, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+			(*this)[i*cols + dest] = (*this)[i*cols + dest] + val;
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOpAdd(const unsigned int* dest, const T val, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+				(*this)[i*cols + dest] =(*this)[i*cols + dest] + val;
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOpMul(const T val, const unsigned int* dest, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+			(*this)[i*cols + dest] = val * (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOpMul(const T val, const unsigned int* dest, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+				(*this)[i*cols + dest] = val * (*this)[i*cols + dest];
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::rowOpMul(const unsigned int* dest, const T val, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+			(*this)[i*cols + dest] = (*this)[i*cols + dest] * val;
+		}
+	}
+}
+
+template<typename T>
+void quad<T>::colOpMul(const unsigned int* dest, const T val, const unsigned int size)
+{
+	for (unsigned int i = 0; i < rows; ++i) {
+		for (unsigned int j = 0; j < cols; ++j) {
+				(*this)[i*cols + dest] =(*this)[i*cols + dest] * val;
+		}
+	}
 }
